@@ -9,15 +9,13 @@
 #include "ldns/ldns.h"
 #include "mysql++/mysql++.h"
 
-#include "Queue.h"
 #include "ThreadPool.h"
 #include "Domain.h"
 #include "Persistence.h"
 
 
 bool stop_flag = false;
-
-void signal_handler(int signal, std::function<void()> shutdown)
+void signal_handler(int signal)
 {
     stop_flag = true;
 }
@@ -31,10 +29,12 @@ void shcedule(const std::chrono::duration<R, P>& duration, std::function<void()>
     }
 }
 
-
 int
 main(int argc, char *argv[])
 {
+    std::signal(SIGINT,  signal_handler);
+    std::signal(SIGTERM, signal_handler);
+    
     int freq = 0;
     std::string db_name, db_host, db_user, db_password;
 
@@ -49,7 +49,6 @@ main(int argc, char *argv[])
         db_user = std::string(argv[4]);
         db_password = std::string(argv[5]);
     }
-
 
     std::vector<Domain> domains;
 
@@ -74,7 +73,6 @@ main(int argc, char *argv[])
     //TODO make this an input parameter
     ThreadPool pool(20);
 
-    //TODO make this as long as the frequency provided by user
     std::thread producer([&] {
         shcedule(std::chrono::milliseconds(1000 / freq), [&] {
             for (auto &domain: domains) {
@@ -84,12 +82,14 @@ main(int argc, char *argv[])
     });
 
 
-    //TODO consumer to call persistence and display object
     std::thread consumer([&](){
+        /* coalesce number of display/db updates so we do not blow the db with so many updates */
         shcedule(std::chrono::seconds(1), [&] {
             std::cout << std::endl;
             Domain::ShowHeaders();
             std::copy(domains.begin(), domains.end(), std::ostream_iterator<Domain>(std::cout, "\n"));
+
+            /* persist objects */
             for (auto const &domain: domains) {
                 persistence.SaveDomain(domain);
             }
