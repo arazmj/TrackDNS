@@ -34,7 +34,7 @@ main(int argc, char *argv[])
 {
     std::signal(SIGINT,  signal_handler);
     std::signal(SIGTERM, signal_handler);
-    
+
     int freq = 0;
     std::string db_name, db_host, db_user, db_password;
 
