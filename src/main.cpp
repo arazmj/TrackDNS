@@ -29,8 +29,7 @@ void shcedule(const std::chrono::duration<R, P>& duration, std::function<void()>
     }
 }
 
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     std::signal(SIGINT,  signal_handler);
     std::signal(SIGTERM, signal_handler);
@@ -81,9 +80,9 @@ main(int argc, char *argv[])
         });
     });
 
-
     std::thread consumer([&](){
         /* coalesce number of display/db updates so we do not blow the db with so many updates */
+        //TODO make update time admin input
         shcedule(std::chrono::seconds(1), [&] {
             std::cout << std::endl;
             Domain::ShowHeaders();
