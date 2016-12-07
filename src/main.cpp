@@ -12,6 +12,7 @@
 #include "Queue.h"
 #include "ThreadPool.h"
 #include "Domain.h"
+#include "Persistence.h"
 
 
 bool stop_flag = false;
@@ -53,6 +54,13 @@ main(int argc, char *argv[])
     domains.emplace_back("msn.com");
     domains.emplace_back("qq.com");
 
+
+    Persistence persistence("TrackDNS", "127.0.0.1", "root", "password");
+
+    for (auto &domain: domains) {
+        persistence.LoadDomain(domain);
+    }
+
     //TODO make this an input parameter
     ThreadPool pool(20);
 
@@ -67,12 +75,13 @@ main(int argc, char *argv[])
 
 
     //TODO consumer to call persistence and display object
-    std::thread consumer([&domains](){
-        shcedule(std::chrono::seconds(1), [&domains] {
-            std::cout << "################################################" << std::endl;
-            for (auto const &domain: domains)
-                std::cout << domain << std::endl;
-
+    std::thread consumer([&](){
+        shcedule(std::chrono::seconds(1), [&] {
+            Domain::ShowHeaders();
+            std::copy(domains.begin(), domains.end(), std::ostream_iterator<Domain>(std::cout, "\n"));
+            for (auto const &domain: domains) {
+                persistence.SaveDomain(domain);
+            }
         });
     });
 
@@ -80,31 +89,6 @@ main(int argc, char *argv[])
     consumer.join();
     producer.join();
 
-    // Get database access parameters from command line
-    // Connect to the sample database.
-    mysqlpp::Connection conn;
-    if (conn.connect("TrackDNS", "127.0.0.1", "root", "password")) {
-        // Retrieve a subset of the sample stock table set up by resetdb
-        // and display it.
-        mysqlpp::Query query = conn.query("select dns_name from stats");
-        if (mysqlpp::StoreQueryResult res = query.store()) {
-            std::cout << "We have:" << std::endl;
-            mysqlpp::StoreQueryResult::const_iterator it;
-            for (it = res.begin(); it != res.end(); ++it) {
-                mysqlpp::Row row = *it;
-                std::cout << '\t' << row[0] << std::endl;
-            }
-        }
-        else {
-            std::cerr << "Failed to get item list: " << query.error() << std::endl;
-            return EXIT_FAILURE;
-        }
-
-        return EXIT_SUCCESS;
-    }
-    else {
-        std::cerr << "DB connection failed: " << conn.error() << std::endl;
-        return EXIT_FAILURE;
-    }
+    return EXIT_SUCCESS;
 }
 
