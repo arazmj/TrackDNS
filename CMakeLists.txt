@@ -18,9 +18,9 @@ include_directories(${LDNS_INCLUDE_DIRS})
 set(SOURCE_FILES
         src/main.cpp
         src/Queue.h
-        src/DNSResponse.cpp
-        src/DNSResponse.h
-        src/ThreadPool.h)
+        src/ThreadPool.h
+        src/Domain.h
+        src/Domain.cpp)
 
 add_executable(TrackDNS ${SOURCE_FILES})
 

@@ -5,7 +5,7 @@
 #  MYSQLPP_LIBRARIES, the libraries needed to use MySQL.
 #  MYSQLPP_FOUND, If false, do not try to use MySQL.
 
-FIND_PATH(MYSQLPP_INCLUDE_DIR mysql++.h
+find_path(MYSQLPP_INCLUDE_DIR mysql++.h
     /usr/include/mysql++
     /usr/local/include/mysql++
     /opt/mysql++/include/mysql++
@@ -13,7 +13,7 @@ FIND_PATH(MYSQLPP_INCLUDE_DIR mysql++.h
     /opt/mysqlpp/include/
     )
 
-FIND_LIBRARY(MYSQLPP_LIBRARIES NAMES mysqlpp
+find_library(MYSQLPP_LIBRARIES NAMES mysqlpp
     PATHS
     /usr/lib
     /usr/local/lib

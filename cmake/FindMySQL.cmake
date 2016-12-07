@@ -5,40 +5,38 @@
 #  MYSQL_LIBRARIES   - List of libraries when using MySQL.
 #  MYSQL_FOUND       - True if MySQL found.
 
-
-
-FIND_PATH(MYSQL_INCLUDE_DIR mysql.h
+find_path(MYSQL_INCLUDE_DIR mysql.h
         /usr/local/include/mysql
         /usr/include/mysql
         )
 
-SET(MYSQL_NAMES mysqlclient mysqlclient_r)
-FIND_LIBRARY(MYSQL_LIBRARY
+set(MYSQL_NAMES mysqlclient mysqlclient_r)
+find_library(MYSQL_LIBRARY
         NAMES ${MYSQL_NAMES}
         PATHS /usr/lib /usr/local/lib
         PATH_SUFFIXES mysql
         )
 
 IF (MYSQL_INCLUDE_DIR AND MYSQL_LIBRARY)
-    SET(MYSQL_FOUND TRUE)
-    SET( MYSQL_LIBRARIES ${MYSQL_LIBRARY} )
+    set(MYSQL_FOUND TRUE)
+    set( MYSQL_LIBRARIES ${MYSQL_LIBRARY} )
 ELSE (MYSQL_INCLUDE_DIR AND MYSQL_LIBRARY)
-    SET(MYSQL_FOUND FALSE)
-    SET( MYSQL_LIBRARIES )
+    set(MYSQL_FOUND FALSE)
+    set( MYSQL_LIBRARIES )
 ENDIF (MYSQL_INCLUDE_DIR AND MYSQL_LIBRARY)
 
 IF (MYSQL_FOUND)
     IF (NOT MYSQL_FIND_QUIETLY)
-        MESSAGE(STATUS "Found MySQL: ${MYSQL_INCLUDE_DIR}, ${MYSQL_LIBRARY}")
+        message(STATUS "Found MySQL: ${MYSQL_INCLUDE_DIR}, ${MYSQL_LIBRARY}")
     ENDIF (NOT MYSQL_FIND_QUIETLY)
 ELSE (MYSQL_FOUND)
     IF (MYSQL_FIND_REQUIRED)
-        MESSAGE(STATUS "Looked for MySQL libraries named ${MYSQL_NAMES}.")
-        MESSAGE(FATAL_ERROR "Could NOT find MySQL library")
+        message(STATUS "Looked for MySQL libraries named ${MYSQL_NAMES}.")
+        message(FATAL_ERROR "Could NOT find MySQL library")
     ENDIF (MYSQL_FIND_REQUIRED)
 ENDIF (MYSQL_FOUND)
 
-MARK_AS_ADVANCED(
+mark_as_advanced(
         MYSQL_LIBRARY
         MYSQL_INCLUDE_DIR
 )
