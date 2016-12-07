@@ -16,7 +16,8 @@
 
 
 bool stop_flag = false;
-void signal_handler(int signal)
+
+void signal_handler(int signal, std::function<void()> shutdown)
 {
     stop_flag = true;
 }
@@ -34,14 +35,24 @@ void shcedule(const std::chrono::duration<R, P>& duration, std::function<void()>
 int
 main(int argc, char *argv[])
 {
-    std::signal(SIGINT,  signal_handler);
-    std::signal(SIGTERM, signal_handler);
+    int freq = 0;
+    std::string db_name, db_host, db_user, db_password;
 
-    //TODO can we do this inline without calling the copy constructor?
-    std::vector<Domain> domains; /* {"google.com", "facebook.com", "youtube.com",
-                           "yahoo.com", "live.com", "wikipedia.org",
-                           "baidu.com", "blogger.com", "msn.com",
-                           "qq.com"};*/
+    if (argc < 6) {
+        std::cout << "TrackDNS [frequency] [DB name] [DB Host] [DB User] [DB Password]" << std::endl;
+        std::cout << "Example: ./TrackDNS 10 TrackDNS 127.0.0.1 root password" << std::endl;
+        return EXIT_FAILURE;
+    } else {
+        freq = std::stoi(argv[1]);
+        db_name = std::string(argv[2]);
+        db_host = std::string(argv[3]);
+        db_user = std::string(argv[4]);
+        db_password = std::string(argv[5]);
+    }
+
+
+    std::vector<Domain> domains;
+
     domains.reserve(10);
     domains.emplace_back("google.com");
     domains.emplace_back("facebook.com");
@@ -54,8 +65,7 @@ main(int argc, char *argv[])
     domains.emplace_back("msn.com");
     domains.emplace_back("qq.com");
 
-
-    Persistence persistence("TrackDNS", "127.0.0.1", "root", "password");
+    Persistence persistence(db_name, db_host, db_user, db_password);
 
     for (auto &domain: domains) {
         persistence.LoadDomain(domain);
@@ -66,7 +76,7 @@ main(int argc, char *argv[])
 
     //TODO make this as long as the frequency provided by user
     std::thread producer([&] {
-        shcedule(std::chrono::seconds(1), [&] {
+        shcedule(std::chrono::milliseconds(1000 / freq), [&] {
             for (auto &domain: domains) {
                 pool.enqueue([&] { domain.Update();  });
             }
@@ -77,6 +87,7 @@ main(int argc, char *argv[])
     //TODO consumer to call persistence and display object
     std::thread consumer([&](){
         shcedule(std::chrono::seconds(1), [&] {
+            std::cout << std::endl;
             Domain::ShowHeaders();
             std::copy(domains.begin(), domains.end(), std::ostream_iterator<Domain>(std::cout, "\n"));
             for (auto const &domain: domains) {
@@ -88,6 +99,11 @@ main(int argc, char *argv[])
     std::this_thread::sleep_for(std::chrono::seconds(1));
     consumer.join();
     producer.join();
+
+    /* shutdown gracefully */
+    for (auto const &domain: domains) {
+        persistence.SaveDomain(domain);
+    }
 
     return EXIT_SUCCESS;
 }
