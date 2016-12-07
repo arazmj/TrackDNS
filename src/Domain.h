@@ -24,6 +24,7 @@ public:
     Domain(Domain&&) noexcept {}
     Domain& operator=(Domain&&) = default;
 
+
 public:
     void Update();
 
@@ -38,7 +39,7 @@ private:
     std::atomic<timestamp> last_timestamp_ {0};
 
 public:
-    std::string domain() const;
+    std::string dns_name() const;
     double time_average() const;
     double time_deviation() const;
     uint32_t count() const;
@@ -46,8 +47,15 @@ public:
     uint32_t first_timestamp() const;
     uint32_t last_timestamp() const;
 
+    void time_average(double time);
+    void time_deviation(double time);
+    void count(uint32_t count);
+    void last_querytime(querytime time);
+    void first_timestamp(uint32_t time);
+    void last_timestamp(uint32_t time);
 
     friend std::ostream &operator<<(std::ostream &os, const Domain &domain);
+    static void ShowHeaders();
 };
 
 

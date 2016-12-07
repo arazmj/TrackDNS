@@ -20,7 +20,7 @@ set(SOURCE_FILES
         src/Queue.h
         src/ThreadPool.h
         src/Domain.h
-        src/Domain.cpp)
+        src/Domain.cpp src/Persistence.cpp src/Persistence.h)
 
 add_executable(TrackDNS ${SOURCE_FILES})
 

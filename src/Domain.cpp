@@ -7,7 +7,7 @@
 #include <tuple>
 #include <iomanip>
 #include <cmath>
-
+#include <sstream>
 
 #include "Domain.h"
 #include "ldns/ldns.h"
@@ -22,6 +22,7 @@ std::string get_random_str()
     //TODO make string size random
     static const size_t S_LEN = 20;
 
+    //TODO make the random device randome engine etc member variable or even global static
     std::random_device rd;
     std::default_random_engine rng(rd());
     std::uniform_int_distribution<> dist(0,sizeof(alphabet)/sizeof(*alphabet)-2);
@@ -36,23 +37,20 @@ std::string get_random_str()
 std::tuple<querytime, timestamp> Domain::process(const std::string &url) const {
     //TODO can we store ldns_resolver per class so we won't need to instantiate it every time.
     //TODO or maybe even we should have only a single resolver per app
-    //TODO TODO TODO TODO NEEDS REFORMATING
-    auto domain_ptr = ldns_dname_new_frm_str(url.c_str());
+    auto dname = ldns_dname_new_frm_str(url.c_str());
 
-    if (!domain_ptr)
+    if (!dname)
         throw std::runtime_error { "ldns_dname_new_frm_str failure" };
 
-    ldns_resolver * resolver_ptr { nullptr };
+    ldns_resolver *resolver { nullptr };
 
-    if (ldns_resolver_new_frm_file(&resolver_ptr, nullptr) != LDNS_STATUS_OK)
+    if (ldns_resolver_new_frm_file(&resolver, nullptr) != LDNS_STATUS_OK)
         throw std::runtime_error { "ldns_resolver_new_frm_file failure failure" };
 
-    auto packet = ldns_resolver_query(resolver_ptr,
-                                      domain_ptr,
-                                      LDNS_RR_TYPE_A,
-                                      LDNS_RR_CLASS_IN,
-                                      LDNS_RD);
-    ldns_rdf_deep_free(domain_ptr);
+    auto packet = ldns_resolver_query(resolver, dname, LDNS_RR_TYPE_A, LDNS_RR_CLASS_IN, LDNS_RD);
+
+    //TODO not efficent
+    ldns_rdf_deep_free(dname);
 
     if (!packet)
         throw std::runtime_error { "ldns_resolver_query failure" };
@@ -63,7 +61,7 @@ std::tuple<querytime, timestamp> Domain::process(const std::string &url) const {
 }
 
 void Domain::Update() {
-    /* append random string to begining of the domain url */
+    /* append random string to begining of the dns_name url */
     std::string random_url = get_random_str() + "." + domain_;
 
     /* update query results */
@@ -100,7 +98,7 @@ void Domain::Update() {
     last_querytime_ = new_querytime;
 }
 
-std::string Domain::domain() const {
+std::string Domain::dns_name() const {
     return domain_;
 }
 
@@ -128,12 +126,48 @@ uint32_t Domain::last_timestamp() const {
     return last_timestamp_.load();
 }
 
+void Domain::time_average(double time) {
+    time_average_ = time;
+}
+
+void Domain::time_deviation(double time) {
+    time_deviation_ = time;
+}
+
+void Domain::count(uint32_t count) {
+    count_ = count;
+}
+
+void Domain::last_querytime(querytime time) {
+    last_querytime_ = time;
+}
+
+void Domain::first_timestamp(uint32_t time) {
+    first_timestamp_ = time;
+}
+
+void Domain::last_timestamp(uint32_t time) {
+    last_querytime_ = time;
+}
+
 std::ostream &operator<<(std::ostream &os, const Domain &domain) {
-    return os << std::setw(15) << std::left << domain.domain()
+    return os << std::setw(15) << std::left << domain.dns_name()
               << std::setw(15) << std::left << domain.last_querytime()
               << std::setw(15) << std::left << domain.last_timestamp()
               << std::setw(15) << std::left << domain.first_timestamp()
               << std::setw(15) << std::left << domain.count()
               << std::setw(15) << std::left << domain.time_average()
               << std::setw(15) << std::left << domain.time_deviation();
+}
+
+void Domain::ShowHeaders() {
+    //TODO not good
+    std::cout << std::setw(15) << std::left << "DNS"
+              << std::setw(15) << std::left << "Current"
+              << std::setw(15) << std::left << "Last TS"
+              << std::setw(15) << std::left << "First TS"
+              << std::setw(15) << std::left << "Count"
+              << std::setw(15) << std::left << "Average"
+              << std::setw(15) << std::left << "Deviation"
+                                            << std::endl;
 }
