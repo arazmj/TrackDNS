@@ -1,10 +1,7 @@
 #include <iostream>
 #include <string>
 #include <thread>
-#include <future>
 #include <csignal>
-#include <random>
-#include <map>
 
 #include "ldns/ldns.h"
 #include "mysql++/mysql++.h"
@@ -12,7 +9,6 @@
 #include "ThreadPool.h"
 #include "Domain.h"
 #include "Persistence.h"
-
 
 bool stop_flag = false;
 void signal_handler(int signal)
@@ -75,7 +71,7 @@ int main(int argc, char *argv[])
     std::thread producer([&] {
         shcedule(std::chrono::milliseconds(1000 / freq), [&] {
             for (auto &domain: domains) {
-                pool.enqueue([&] { domain.Update();  });
+                pool.enqueue([&] { domain.Update(); });
             }
         });
     });

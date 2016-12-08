@@ -19,7 +19,9 @@ set(SOURCE_FILES
         src/main.cpp
         src/ThreadPool.h
         src/Domain.h
-        src/Domain.cpp src/Persistence.cpp src/Persistence.h)
+        src/Domain.cpp
+        src/Persistence.cpp
+        src/Persistence.h)
 
 add_executable(TrackDNS ${SOURCE_FILES})
 

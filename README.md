@@ -1,6 +1,9 @@
 # TrackDNS
 Check top DNS performance
 
+usage: TrackDNS [frequency] [DB name] [DB Host] [DB User] [DB Password]
+example: ./TrackDNS 10 TrackDNS 127.0.0.1 root password
+
 | DNS           | Current | Last TS | First TS | Count | Average | Deviation | 
 |---------------|---------|---------|----------|-------|---------|-----------| 
 | google.com    | 45      | 48008   | 153211   | 282   | 577.197 | 2.34871   | 
