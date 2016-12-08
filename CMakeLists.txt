@@ -18,6 +18,7 @@ include_directories(${LDNS_INCLUDE_DIRS})
 set(SOURCE_FILES
         src/main.cpp
         src/ThreadPool.h
+        src/ThreadPool.cpp
         src/Domain.h
         src/Domain.cpp
         src/Persistence.cpp

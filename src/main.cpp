@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     std::thread producer([&] {
         shcedule(std::chrono::milliseconds(1000 / freq), [&] {
             for (auto &domain: domains) {
-                pool.enqueue([&] { domain.Update(); });
+                pool.enqueue([&domain] { domain.Update(); });
             }
         });
     });
@@ -80,6 +80,7 @@ int main(int argc, char *argv[])
         /* coalesce number of display/db updates so we do not blow the db with so many updates */
         //TODO make update time admin input
         shcedule(std::chrono::seconds(1), [&] {
+            //TODO it would be nice to sort it by latency
             std::cout << std::endl;
             Domain::ShowHeaders();
             std::copy(domains.begin(), domains.end(), std::ostream_iterator<Domain>(std::cout, "\n"));
