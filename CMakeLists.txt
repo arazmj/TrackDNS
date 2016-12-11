@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.7.1)
 
-project(TrackDNS)
+project(trackdns)
 
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+find_package(Boost REQUIRED program_options)
 find_package(MySQL REQUIRED)
 find_package(MySQLPP REQUIRED)
 find_package(LDNS REQUIRED)
@@ -24,9 +25,10 @@ set(SOURCE_FILES
         src/Persistence.cpp
         src/Persistence.h)
 
-add_executable(TrackDNS ${SOURCE_FILES})
+add_executable(trackdns ${SOURCE_FILES})
 
-target_link_libraries(TrackDNS
+target_link_libraries(trackdns
+        ${Boost_LIBRARIES}
         ${MYSQLPP_LIBRARIES}
         ${LDNS_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT})

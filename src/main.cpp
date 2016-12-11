@@ -18,21 +18,21 @@ using namespace boost::program_options;
 volatile bool stop_flag = false;
 void signal_handler(int signal) { stop_flag = true; }
 
-template <class R, class P>
-void shcedule(const std::chrono::duration<R, P>& duration, std::function<void()> func)
-{
+template<class R, class P>
+void shcedule(const std::chrono::duration<R, P> &duration, std::function<void()> func) {
     while (!stop_flag) {
         func();
         std::this_thread::sleep_for(duration);
     }
 }
 
-int main(int argc, char *argv[])
-{
-    std::signal(SIGINT,  signal_handler);
+std::vector<Domain *> sort_domain_ptrs(std::vector<Domain> &domains);
+
+int main(int argc, const char *argv[]) {
+    std::signal(SIGINT, signal_handler);
     std::signal(SIGTERM, signal_handler);
 
-    options_description description("TrackDNS, measures top DNS servers performance");
+    options_description description("\nTrackDNS, measures top DNS servers performance");
     variables_map vm;
 
     description.add_options()
@@ -48,12 +48,10 @@ int main(int argc, char *argv[])
     int freq = 0, refresh_rate = 0, n_thread = 0;
     std::string db_name, db_host, db_user, db_password;
 
-    try
-    {
+    try {
         store(parse_command_line(argc, argv, description), vm);
 
-        if (vm.count("help"))
-        {
+        if (vm.count("help")) {
             std::cout << description << std::endl;
             return EXIT_SUCCESS;
         }
@@ -66,8 +64,7 @@ int main(int argc, char *argv[])
         n_thread = vm["threads"].as<unsigned>();
         refresh_rate = vm["refresh"].as<unsigned>();
     }
-    catch (const std::exception &e)
-    {
+    catch (const std::exception &e) {
         std::cerr << e.what() << description << std::endl;
         return EXIT_FAILURE;
     }
@@ -93,8 +90,7 @@ int main(int argc, char *argv[])
             persistence.LoadDomain(domain);
         }
 
-        //TODO make this an input parameter
-        ThreadPool pool(n_thread);
+        ThreadPool pool((size_t) n_thread);
 
         std::thread producer([&] {
             shcedule(std::chrono::milliseconds(1000 / freq), [&] {
@@ -106,16 +102,13 @@ int main(int argc, char *argv[])
 
         std::thread consumer([&]() {
             /* coalesce number of display/db updates so we do not blow the db with so many updates */
-            //TODO make update time admin input
             shcedule(std::chrono::seconds(refresh_rate), [&] {
-                //TODO it would be nice to sort it by latency
-                std::cout << std::endl;
-                Domain::ShowHeaders();
-                std::copy(domains.begin(), domains.end(), std::ostream_iterator<Domain>(std::cout, "\n"));
-
+                /* we can not sort swap domain objects directly so we sort the vector of domain pointers */
+                std::vector<Domain *> sorted_domains = sort_domain_ptrs(domains);
                 /* persist objects */
-                for (auto const &domain: domains) {
-                    persistence.SaveDomain(domain);
+                for (auto const &domain: sorted_domains) {
+                    std::cout << *domain << std::endl;
+                    persistence.SaveDomain(*domain);
                 }
             });
         });
@@ -129,11 +122,29 @@ int main(int argc, char *argv[])
             persistence.SaveDomain(domain);
         }
 
-    } catch (mysqlpp::ConnectionFailed e) {
-        std::cerr << e.what()  << std::endl;
+    } catch (const mysqlpp::ConnectionFailed &e) {
+        std::cerr << "mysqlpp::ConnectionFailed " << e.what() << std::endl;
+        std::cerr << db_user << "@" << db_host << " Password: " << db_password << std::endl;
+    } catch (const mysqlpp::BadQuery &e) {
+        std::cerr << "mysqlpp::BadQuery " << e.what() << std::endl;
         std::cerr << db_user << "@" << db_host << " Password: " << db_password << std::endl;
     }
 
     return EXIT_SUCCESS;
+}
+
+std::vector<Domain *> sort_domain_ptrs(std::vector<Domain> &domains) {
+    std::__1::vector<Domain *> sorted_domains;
+    sorted_domains.resize(domains.size());
+    transform(domains.begin(), domains.end(), sorted_domains.begin(),
+                               [](Domain &d) { return &d; });
+
+    sort(sorted_domains.begin(), sorted_domains.end(),
+                          [](const Domain *d1, const Domain *d2)
+                          { return *d1 < *d2; } );
+
+    std::__1::cout << std::__1::endl;
+    Domain::ShowHeaders();
+    return sorted_domains;
 }
 

@@ -147,7 +147,7 @@ void Domain::first_timestamp(uint32_t time) {
 }
 
 void Domain::last_timestamp(uint32_t time) {
-    last_querytime_ = time;
+    last_timestamp_ = time;
 }
 
 std::ostream &operator<<(std::ostream &os, const Domain &domain) {
@@ -170,4 +170,8 @@ void Domain::ShowHeaders() {
               << std::setw(15) << std::left << "Average"
               << std::setw(15) << std::left << "Deviation"
                                             << std::endl;
+}
+
+bool Domain::operator<(const Domain &rhs) const {
+    return last_querytime_ < rhs.last_querytime_;
 }

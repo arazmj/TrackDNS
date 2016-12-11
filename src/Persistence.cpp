@@ -48,7 +48,7 @@ void Persistence::LoadDomain(Domain &d) {
         d.count(result[0]["count"]);
         d.time_deviation(result[0]["time_deviation"]);
         d.first_timestamp(result[0]["first_timestamp"]);
-        d.last_querytime(result[0]["last_timestamp"]);
+        d.last_timestamp(result[0]["last_timestamp"]);
     }
 }
 

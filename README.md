@@ -1,8 +1,18 @@
 # TrackDNS
 Check top DNS performance
 
-usage: TrackDNS [frequency] [DB name] [DB Host] [DB User] [DB Password]
-example: ./TrackDNS 10 TrackDNS 127.0.0.1 root password
+TrackDNS, measures top DNS servers performance:
+  --help                            Help
+  -f [ --frequency ] arg (=20)      Frequency, number of queries per second
+  -d [ --database ] arg (=TrackDNS) Database name
+  -h [ --host ] arg (=127.0.0.1)    Database host name
+  -u [ --username ] arg (=root)     Database username
+  -p [ --password ] arg (=password) Database password
+  -t [ --threads ] arg (=20)        Number of threads for the thread pool
+  -r [ --refresh ] arg (=1)         Frequency of database and display update 
+                                    per second
+                                    
+example: ./TrackDNS -f 10 -d TrackDNS -h 127.0.0.1 -u root -p password
 
 | DNS           | Current | Last TS | First TS | Count | Average | Deviation | 
 |---------------|---------|---------|----------|-------|---------|-----------| 

@@ -43,5 +43,4 @@ private:
     bool stop = false;
 };
 
-
 #endif //TRACKDNS_THREADPOOL_H_H

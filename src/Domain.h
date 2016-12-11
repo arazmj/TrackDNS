@@ -32,7 +32,6 @@ private:
     std::string domain_;
     std::atomic<double> time_average_ {0};
     std::atomic<double> time_deviation_ {0};
-
     std::atomic<uint32_t> count_ {0};
     std::atomic<querytime> last_querytime_ {0};
     std::atomic<timestamp> first_timestamp_ {0};
@@ -53,6 +52,8 @@ public:
     void last_querytime(querytime time);
     void first_timestamp(uint32_t time);
     void last_timestamp(uint32_t time);
+
+    bool operator < (const Domain &rhs) const;
 
     friend std::ostream &operator<<(std::ostream &os, const Domain &domain);
     static void ShowHeaders();
