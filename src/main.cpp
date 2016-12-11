@@ -48,6 +48,7 @@ int main(int argc, const char *argv[]) {
     int freq = 0, refresh_rate = 0, n_thread = 0;
     std::string db_name, db_host, db_user, db_password;
 
+    /* parse command line arguments */
     try {
         store(parse_command_line(argc, argv, description), vm);
 
@@ -103,6 +104,8 @@ int main(int argc, const char *argv[]) {
         std::thread consumer([&]() {
             /* coalesce number of display/db updates so we do not blow the db with so many updates */
             shcedule(std::chrono::seconds(refresh_rate), [&] {
+                std::cout << std::endl;
+                Domain::ShowHeaders();
                 /* we can not sort swap domain objects directly so we sort the vector of domain pointers */
                 std::vector<Domain *> sorted_domains = sort_domain_ptrs(domains);
                 /* persist objects */
@@ -143,8 +146,6 @@ std::vector<Domain *> sort_domain_ptrs(std::vector<Domain> &domains) {
                           [](const Domain *d1, const Domain *d2)
                           { return *d1 < *d2; } );
 
-    std::__1::cout << std::__1::endl;
-    Domain::ShowHeaders();
     return sorted_domains;
 }
 

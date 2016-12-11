@@ -1,6 +1,7 @@
 # TrackDNS
 Check top DNS performance
 
+```bash
 TrackDNS, measures top DNS servers performance:
   --help                            Help
   -f [ --frequency ] arg (=20)      Frequency, number of queries per second
@@ -11,6 +12,7 @@ TrackDNS, measures top DNS servers performance:
   -t [ --threads ] arg (=20)        Number of threads for the thread pool
   -r [ --refresh ] arg (=1)         Frequency of database and display update 
                                     per second
+```
                                     
 example: ./TrackDNS -f 10 -d TrackDNS -h 127.0.0.1 -u root -p password
 

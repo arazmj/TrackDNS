@@ -14,8 +14,8 @@ private:
     mysqlpp::Connection connection;
 
 public:
-    Persistence(const std::string &db_name, const std::string &db_host, const std::string &username,
-                const std::string &password);
+    Persistence(const std::string &db_name, const std::string &db_host,
+                const std::string &username, const std::string &password);
     void SaveDomain(const Domain &domain);
     void LoadDomain(Domain &domain);
     virtual ~Persistence();
