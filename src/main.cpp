@@ -41,9 +41,11 @@ int main(int argc, char *argv[])
             ("database,d", value<std::string>()->default_value("TrackDNS"), "Database name")
             ("host,h", value<std::string>()->default_value("127.0.0.1"), "Database host name")
             ("username,u", value<std::string>()->default_value("root"), "Database username")
-            ("password,p", value<std::string>()->default_value("password"), "Database password");
+            ("password,p", value<std::string>()->default_value("password"), "Database password")
+            ("threads,t", value<unsigned>()->default_value(20), "Number of threads for the thread pool")
+            ("refresh,r", value<unsigned>()->default_value(1), "Frequency of database and display update per second");
 
-    int freq = 0;
+    int freq = 0, refresh_rate = 0, n_thread = 0;
     std::string db_name, db_host, db_user, db_password;
 
     try
@@ -61,6 +63,8 @@ int main(int argc, char *argv[])
         db_host = vm["host"].as<std::string>();
         db_user = vm["username"].as<std::string>();
         db_password = vm["password"].as<std::string>();
+        n_thread = vm["threads"].as<unsigned>();
+        refresh_rate = vm["refresh"].as<unsigned>();
     }
     catch (const std::exception &e)
     {
@@ -90,7 +94,7 @@ int main(int argc, char *argv[])
         }
 
         //TODO make this an input parameter
-        ThreadPool pool(20);
+        ThreadPool pool(n_thread);
 
         std::thread producer([&] {
             shcedule(std::chrono::milliseconds(1000 / freq), [&] {
@@ -103,7 +107,7 @@ int main(int argc, char *argv[])
         std::thread consumer([&]() {
             /* coalesce number of display/db updates so we do not blow the db with so many updates */
             //TODO make update time admin input
-            shcedule(std::chrono::seconds(1), [&] {
+            shcedule(std::chrono::seconds(refresh_rate), [&] {
                 //TODO it would be nice to sort it by latency
                 std::cout << std::endl;
                 Domain::ShowHeaders();
