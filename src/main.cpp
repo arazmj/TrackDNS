@@ -21,7 +21,7 @@ using namespace boost::program_options;
 
 template<class R, class P>
 void shcedule(const std::chrono::duration<R, P> &duration, std::function<void()> func) {
-    while (!stop_flag) {
+    while (true) {
         func();
         std::this_thread::sleep_for(duration);
     }
