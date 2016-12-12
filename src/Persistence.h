@@ -11,7 +11,7 @@
 
 class Persistence {
 private:
-    mysqlpp::Connection connection;
+    mysqlpp::Connection connection_;
 
 public:
     Persistence(const std::string &db_name, const std::string &db_host,

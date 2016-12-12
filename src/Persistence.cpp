@@ -10,15 +10,15 @@
 Persistence::Persistence(const std::string &db_name, const std::string &db_host, const std::string &username,
                          const std::string &password) {
 
-    if (!connection.connect(db_name.c_str(), db_host.c_str(),
+    if (!connection_.connect(db_name.c_str(), db_host.c_str(),
                       username.c_str(), password.c_str())) {
         throw std::runtime_error { std::string("DB connection failed: ") +
-                                           std::string(connection.error()) };
+                                           std::string(connection_.error()) };
     }
 }
 
 void Persistence::SaveDomain(const Domain &d) {
-    mysqlpp::Query update(&connection);
+    mysqlpp::Query update(&connection_);
 
     update << "INSERT INTO Stats "
            <<    "(dns_name, time_average, count, time_deviation, first_timestamp, last_timestamp) "
@@ -37,7 +37,7 @@ void Persistence::SaveDomain(const Domain &d) {
 }
 
 void Persistence::LoadDomain(Domain &d) {
-    mysqlpp::Query query(&connection);
+    mysqlpp::Query query(&connection_);
 
     query << "SELECT * FROM stats WHERE dns_name = '" << d.dns_name() << "'";
 
@@ -53,5 +53,6 @@ void Persistence::LoadDomain(Domain &d) {
 }
 
 Persistence::~Persistence() {
+    //TODO do we need clean up?
 }
 

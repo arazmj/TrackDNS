@@ -1,5 +1,5 @@
 # TrackDNS
-Check top DNS performance
+Check top DNS servers performance
 
 ```bash
 TrackDNS, measures top DNS servers performance:
@@ -11,10 +11,10 @@ TrackDNS, measures top DNS servers performance:
   -p [ --password ] arg (=password) Database password
   -t [ --threads ] arg (=20)        Number of threads for the thread pool
   -r [ --refresh ] arg (=1)         Frequency of database and display update 
-                                    per second
+                                    per second                                  
+  example: ./TrackDNS -f 10 -d TrackDNS -h 127.0.0.1 -u root -p password
 ```
                                     
-example: ./TrackDNS -f 10 -d TrackDNS -h 127.0.0.1 -u root -p password
 
 | DNS           | Current | Last TS | First TS | Count | Average | Deviation | 
 |---------------|---------|---------|----------|-------|---------|-----------| 

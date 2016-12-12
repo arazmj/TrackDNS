@@ -4,19 +4,20 @@
 #include <csignal>
 
 #include <boost/program_options.hpp>
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/signal_set.hpp>
+#include <boost/bind.hpp>
+#include <boost/thread/thread.hpp>
+
 
 #include "ldns/ldns.h"
 #include "mysql++/mysql++.h"
 
-#include "ThreadPool.h"
 #include "Domain.h"
 #include "Persistence.h"
 
 //TODO add namespace for the whole program
 using namespace boost::program_options;
-
-volatile bool stop_flag = false;
-void signal_handler(int signal) { stop_flag = true; }
 
 template<class R, class P>
 void shcedule(const std::chrono::duration<R, P> &duration, std::function<void()> func) {
@@ -29,9 +30,6 @@ void shcedule(const std::chrono::duration<R, P> &duration, std::function<void()>
 std::vector<Domain *> sort_domain_ptrs(std::vector<Domain> &domains);
 
 int main(int argc, const char *argv[]) {
-    std::signal(SIGINT, signal_handler);
-    std::signal(SIGTERM, signal_handler);
-
     options_description description("\nTrackDNS, measures top DNS servers performance");
     variables_map vm;
 
@@ -43,7 +41,7 @@ int main(int argc, const char *argv[]) {
             ("username,u", value<std::string>()->default_value("root"), "Database username")
             ("password,p", value<std::string>()->default_value("password"), "Database password")
             ("threads,t", value<unsigned>()->default_value(20), "Number of threads for the thread pool")
-            ("refresh,r", value<unsigned>()->default_value(1), "Frequency of database and display update per second");
+            ("refresh,r", value<unsigned>()->default_value(1), "Frequency of database/display updates per second");
 
     int freq = 0, refresh_rate = 0, n_thread = 0;
     std::string db_name, db_host, db_user, db_password;
@@ -71,7 +69,6 @@ int main(int argc, const char *argv[]) {
     }
 
     std::vector<Domain> domains;
-
     domains.reserve(10);
     domains.emplace_back("google.com");
     domains.emplace_back("facebook.com");
@@ -91,22 +88,35 @@ int main(int argc, const char *argv[]) {
             persistence.LoadDomain(domain);
         }
 
-        ThreadPool pool((size_t) n_thread);
+        bool stop_flag = false;
+        boost::asio::io_service io_service;
+        boost::thread_group pool;
+        boost::asio::signal_set signals(io_service, SIGINT, SIGTERM);
+        //boost::bind(&boost::asio::io_service::stop, &io_service)
+        //signals.async_wait([&io_service, &stop_flag] { io_service.stop(); stop_flag = true; });
 
-        std::thread producer([&] {
-            shcedule(std::chrono::milliseconds(1000 / freq), [&] {
+//        signals.async_wait(boost::bind(handler, boost::ref(signals), _1, _2));
+
+
+        for (int i = 0; i < n_thread; i++) {
+            pool.create_thread(
+                    boost::bind(&boost::asio::io_service::run, &io_service)
+            );
+        }
+
+        pool.create_thread([&]{
+                shcedule(std::chrono::milliseconds(1000 / freq), [&] {
                 for (auto &domain: domains) {
-                    pool.enqueue([&domain] { domain.Update(); });
+                    io_service.post([&domain] { domain.Update(); });
                 }
             });
         });
 
-        std::thread consumer([&]() {
+        pool.create_thread([&]() {
             /* coalesce number of display/db updates so we do not blow the db with so many updates */
             shcedule(std::chrono::seconds(refresh_rate), [&] {
                 std::cout << std::endl;
                 Domain::ShowHeaders();
-                /* we can not sort swap domain objects directly so we sort the vector of domain pointers */
                 std::vector<Domain *> sorted_domains = sort_domain_ptrs(domains);
                 /* persist objects */
                 for (auto const &domain: sorted_domains) {
@@ -116,11 +126,10 @@ int main(int argc, const char *argv[]) {
             });
         });
 
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        consumer.join();
-        producer.join();
+        pool.join_all();
 
         /* shutdown gracefully */
+        std::cout << "Persisting last result set..." << std::endl;
         for (auto const &domain: domains) {
             persistence.SaveDomain(domain);
         }
@@ -137,6 +146,7 @@ int main(int argc, const char *argv[]) {
 }
 
 std::vector<Domain *> sort_domain_ptrs(std::vector<Domain> &domains) {
+    /* we can not sort swap domain objects directly so we sort the vector of domain pointers */
     std::__1::vector<Domain *> sorted_domains;
     sorted_domains.resize(domains.size());
     transform(domains.begin(), domains.end(), sorted_domains.begin(),
