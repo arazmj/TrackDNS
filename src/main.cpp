@@ -3,12 +3,15 @@
 #include <thread>
 #include <csignal>
 
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/program_options.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
-
+#include <future>
 
 #include "ldns/ldns.h"
 #include "mysql++/mysql++.h"
@@ -16,14 +19,15 @@
 #include "Domain.h"
 #include "Persistence.h"
 
-//TODO add namespace for the whole program
 using namespace boost::program_options;
 
-template<class R, class P>
-void shcedule(const std::chrono::duration<R, P> &duration, std::function<void()> func) {
-    while (true) {
-        func();
-        std::this_thread::sleep_for(duration);
+void shcedule(boost::asio::io_service &io_service,
+              boost::posix_time::time_duration time_duration,
+              std::function<void()> task) {
+    while (!io_service.stopped()) {
+        boost::asio::deadline_timer deadline_timer(io_service, time_duration);
+        deadline_timer.wait();
+        task();
     }
 }
 
@@ -88,15 +92,12 @@ int main(int argc, const char *argv[]) {
             persistence.LoadDomain(domain);
         }
 
-        bool stop_flag = false;
         boost::asio::io_service io_service;
         boost::thread_group pool;
+        boost::asio::io_service::work work(io_service);
         boost::asio::signal_set signals(io_service, SIGINT, SIGTERM);
-        //boost::bind(&boost::asio::io_service::stop, &io_service)
-        //signals.async_wait([&io_service, &stop_flag] { io_service.stop(); stop_flag = true; });
-
-//        signals.async_wait(boost::bind(handler, boost::ref(signals), _1, _2));
-
+        signals.async_wait(
+                boost::bind(&boost::asio::io_service::stop, &io_service));
 
         for (int i = 0; i < n_thread; i++) {
             pool.create_thread(
@@ -105,7 +106,7 @@ int main(int argc, const char *argv[]) {
         }
 
         pool.create_thread([&]{
-                shcedule(std::chrono::milliseconds(1000 / freq), [&] {
+            shcedule(io_service, boost::posix_time::seconds(1), [&] {
                 for (auto &domain: domains) {
                     io_service.post([&domain] { domain.Update(); });
                 }
@@ -113,8 +114,9 @@ int main(int argc, const char *argv[]) {
         });
 
         pool.create_thread([&]() {
+            //TODO put a wait condition here so it won't start without producer
             /* coalesce number of display/db updates so we do not blow the db with so many updates */
-            shcedule(std::chrono::seconds(refresh_rate), [&] {
+            shcedule(io_service, boost::posix_time::milliseconds(1000 / refresh_rate), [&] {
                 std::cout << std::endl;
                 Domain::ShowHeaders();
                 std::vector<Domain *> sorted_domains = sort_domain_ptrs(domains);
@@ -126,10 +128,12 @@ int main(int argc, const char *argv[]) {
             });
         });
 
+        io_service.run();
         pool.join_all();
+        io_service.stop();
 
         /* shutdown gracefully */
-        std::cout << "Persisting last result set..." << std::endl;
+        std::cout << "Persisting the last result set..." << std::endl;
         for (auto const &domain: domains) {
             persistence.SaveDomain(domain);
         }

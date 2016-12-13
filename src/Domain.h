@@ -34,6 +34,8 @@ private:
     std::atomic<double> time_deviation_ {0};
     std::atomic<uint32_t> count_ {0};
     std::atomic<querytime> last_querytime_ {0};
+
+    //TODO make these field MySQL datetime
     std::atomic<timestamp> first_timestamp_ {0};
     std::atomic<timestamp> last_timestamp_ {0};
 
