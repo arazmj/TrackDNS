@@ -11,7 +11,6 @@
 #include <boost/asio/signal_set.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
-#include <future>
 
 #include "ldns/ldns.h"
 #include "mysql++/mysql++.h"

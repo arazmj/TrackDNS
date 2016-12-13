@@ -83,17 +83,14 @@ void Domain::Update() {
     if (count_ == 1) {
         time_deviation_ = 0;
     }
-    else if (count_ == 2)
-    {
+    else if (count_ == 2) {
         time_deviation_ = std::sqrt(pow(time_deviation_ - time_average_, 2.0) +
                                             pow(last_querytime_ - time_average_, 2.0)) / count_;
     }
-    else if (count_ > 2)
-    {
+    else if (count_ > 2) {
         time_deviation_ = std::sqrt(((count_ - 2) * pow(time_deviation_, 2.0) +
                 (last_querytime_ - last_querytime_) * (last_querytime_ - old_average)) / (count_ - 1));
     }
-
 
     last_querytime_ = new_querytime;
 }
