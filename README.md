@@ -1,4 +1,98 @@
 # TrackDNS
+
+TrackDNS is a performance monitoring tool for top DNS servers. It measures the response times of various DNS servers and stores the results in a database for further analysis. The tool supports multithreading for efficient processing and periodic updates for database persistence and display.
+
+# Features
+Measure DNS server performance for popular domains.
+Multithreaded processing using Boost Asio.
+Configurable query frequency and update intervals.
+Results are persisted in a MySQL database.
+Graceful shutdown with proper resource cleanup.
+Sorting and displaying domain performance metrics.
+Requirements
+
+# Libraries
+Boost: Used for asynchronous I/O, threading, and signal handling.
+LDNS: For DNS querying.
+MySQL++: For interacting with the MySQL database.
+System
+A C++ compiler supporting C++11 or later.
+A MySQL database server.
+Installation
+
+Clone the repository:
+```
+git clone https://github.com/yourusername/TrackDNS.git
+cd TrackDNS
+Install dependencies:
+On Ubuntu:
+sudo apt-get install libboost-all-dev libldns-dev libmysql++-dev
+On macOS (using Homebrew):
+brew install boost ldns mysql++
+```
+
+Compile the project:
+```
+make
+Usage
+```
+
+Run the program with the following options:
+```
+./TrackDNS [options]
+Command-Line Options
+Option	Description	Default
+--help	Show help message.
+--frequency, -f	Number of queries per second.	20
+--database, -d	Name of the database.	TrackDNS
+--host, -h	Hostname of the database server.	127.0.0.1
+--username, -u	Database username.	root
+--password, -p	Database password.	password
+--threads, -t	Number of threads in the thread pool.	20
+--refresh, -r	Frequency of database/display updates per second.	1
+```
+
+Example
+Run TrackDNS with a query frequency of 50 queries per second:
+
+```
+./TrackDNS -f 50 -d TrackDNS -u admin -p secretpassword
+```
+How It Works
+
+Domain Initialization: A list of popular domains is initialized.
+Database Connection: Connect to the MySQL database.
+Asynchronous Processing: Use Boost Asio for scheduling periodic tasks.
+DNS Queries: Send DNS queries and update domain metrics.
+Results Persistence: Save results to the database periodically.
+Sorting and Display: Sort domains by performance and display metrics.
+Graceful Shutdown
+
+The application handles termination signals (SIGINT, SIGTERM) to stop processing and persist the final results before exiting.
+
+Contributing
+
+Contributions are welcome! Please fork the repository, make your changes, and submit a pull request.
+
+License
+
+This project is licensed under the MIT License.
+
+Acknowledgments
+
+Boost C++ Libraries
+LDNS Library
+MySQL++
+Feel free to reach out if you encounter any issues or have feature suggestions!
+
+
+
+
+
+
+
+
+# TrackDNS
 Check top DNS servers performance
 
 ```bash
