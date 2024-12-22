@@ -52,13 +52,12 @@ Option	Description	Default
 --refresh, -r	Frequency of database/display updates per second.	1
 ```
 
-Example
+# Example
 Run TrackDNS with a query frequency of 50 queries per second:
-
 ```
 ./TrackDNS -f 50 -d TrackDNS -u admin -p secretpassword
 ```
-How It Works
+# How It Works
 
 Domain Initialization: A list of popular domains is initialized.
 Database Connection: Connect to the MySQL database.
@@ -70,27 +69,20 @@ Graceful Shutdown
 
 The application handles termination signals (SIGINT, SIGTERM) to stop processing and persist the final results before exiting.
 
-Contributing
+# Contributing
 
 Contributions are welcome! Please fork the repository, make your changes, and submit a pull request.
 
-License
+# License
 
 This project is licensed under the MIT License.
 
-Acknowledgments
+# Acknowledgments
 
 Boost C++ Libraries
 LDNS Library
 MySQL++
 Feel free to reach out if you encounter any issues or have feature suggestions!
-
-
-
-
-
-
-
 
 # TrackDNS
 Check top DNS servers performance
